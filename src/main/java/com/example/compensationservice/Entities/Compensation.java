@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Data
@@ -16,17 +17,27 @@ import java.time.LocalDate;
 @Builder
 public class Compensation {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    private String  idCompensation;
     private String description;
     @Column(nullable = false)
     private double amount;
     @Column(nullable = false)
-    private LocalDate date;
+    private LocalDate dateCompensation;
+    private String type;
+    private Boolean salaryAdded;
 
-    public Compensation(String description, double amount, LocalDate date) {
+    @Transient
+    private LocalDate localDate;
+
+    public Compensation(String description, double amount, LocalDate date, String type) {
         this.description = description;
         this.amount = amount;
-        this.date = date;
+        this.dateCompensation = date;
+        this.type = type;
+    }
+
+    public void setDateCompensation(LocalDate localDate) {
+        this.localDate = localDate;
+        this.dateCompensation = LocalDate.parse(localDate.format(DateTimeFormatter.ofPattern("MM/yyyy")));
     }
 }
