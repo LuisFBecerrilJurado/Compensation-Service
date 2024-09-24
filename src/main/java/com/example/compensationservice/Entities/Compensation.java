@@ -1,7 +1,6 @@
 package com.example.compensationservice.Entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Future;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +20,7 @@ public class Compensation {
     private String  idCompensation;
     @Column(nullable = false)
     private String idUser;
+    @Column(length = 10000)
     private String description;
     @Column(nullable = false)
     private Double amount;
@@ -33,11 +33,12 @@ public class Compensation {
     @Transient
     private LocalDate localDate;
 
-    public Compensation(String description, double amount, LocalDate localDate, String type) {
+    public Compensation(String description, Double amount, LocalDate localDate, String type, Boolean salaryAdded) {
         this.description = description;
         this.amount = amount;
         this.type = type;
         this.localDate = localDate;
+        this.salaryAdded = salaryAdded;
         this.dateCompensation = localDate.format(DateTimeFormatter.ofPattern("MM/yyyy"));
     }
 
