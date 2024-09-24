@@ -18,26 +18,30 @@ import java.time.format.DateTimeFormatter;
 public class Compensation {
     @Id
     private String  idCompensation;
+    @Column(nullable = false)
+    private String idUser;
     private String description;
     @Column(nullable = false)
-    private double amount;
+    private Double amount;
     @Column(nullable = false)
-    private LocalDate dateCompensation;
+    private String dateCompensation;
+    @Column(nullable = false)
     private String type;
     private Boolean salaryAdded;
 
     @Transient
     private LocalDate localDate;
 
-    public Compensation(String description, double amount, LocalDate date, String type) {
+    public Compensation(String description, double amount, LocalDate localDate, String type) {
         this.description = description;
         this.amount = amount;
-        this.dateCompensation = date;
         this.type = type;
+        this.localDate = localDate;
+        this.dateCompensation = localDate.format(DateTimeFormatter.ofPattern("MM/yyyy"));
     }
 
-    public void setDateCompensation(LocalDate localDate) {
+    public void setLocalDate(LocalDate localDate) {
         this.localDate = localDate;
-        this.dateCompensation = LocalDate.parse(localDate.format(DateTimeFormatter.ofPattern("MM/yyyy")));
+        this.dateCompensation = localDate.format(DateTimeFormatter.ofPattern("MM/yyyy"));
     }
 }
