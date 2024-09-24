@@ -6,6 +6,7 @@ import com.example.compensationservice.Repository.CompensationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,7 +14,6 @@ import java.util.UUID;
 public class CompensationServiceImpl implements CompensationService{
     @Autowired
     private CompensationRepository compensationRepository;
-    private double amount;
 
     @Override
     public List<Compensation> getAllCompensations() {
@@ -47,32 +47,39 @@ public class CompensationServiceImpl implements CompensationService{
     }
 
     private void compensationValidation(Compensation compensation) {
-        if(compensationRepository.existsByDateCompensation(compensation.getDateCompensation()))
-            throw new CompensationException("Compensation already exits with this date");
+        if(compensationRepository.existsByDateCompensationAndIdUser(compensation.getDateCompensation(), compensation.getIdUser()))
+            throw new CompensationException("A compensation already exists for this user on this date");
+    }
+
+    private void validateDate(Compensation compensation) {
+        LocalDate currentDate = LocalDate.now();
+        if(compensation.getLocalDate().isBefore(currentDate)) throw new CompensationException("Date must be after the current date");
     }
 
     @Override
-    public Compensation saveCompensation(Compensation compensation) {
+    public void saveCompensation(Compensation compensation) {
         compensationValidation(compensation);
         validateFields(compensation);
+        validateDate(compensation);
         generateAndSetUserId(compensation);
         final String amountLessThanZeroError = "Amount must be greater than 0";
         final String amountEqualZeroError = "Amount must be different than 0";
-        return switch (compensation.getType()) {
+        switch (compensation.getType()) {
             case "salary" -> {
                 compensation.setSalaryAdded(true);
-                yield compensationRepository.save(compensation);
+                compensationRepository.save(compensation);
             }
             case "bonus", "commission", "allowance" -> {
                 validateAmountGreaterThanZero(compensation, amountLessThanZeroError);
-                yield compensationRepository.save(compensation);
+                compensationRepository.save(compensation);
             }
             case "adjustment" -> {
                 validateAmountDifferentFromZero(compensation, amountEqualZeroError);
-                yield compensationRepository.save(compensation);
+                compensationRepository.save(compensation);
             }
-            default -> compensation;
-        };
+            default -> {
+            }
+        }
     }
 
     @Override
@@ -86,7 +93,7 @@ public class CompensationServiceImpl implements CompensationService{
     }
 
     @Override
-    public List<Compensation> getCompensationByUserId(String userId) {
-        return compensationRepository.findByIdUser(userId);
+    public List<Compensation> getCompensationByIdUser(String idUser) {
+        return compensationRepository.findByIdUser(idUser);
     }
 }
