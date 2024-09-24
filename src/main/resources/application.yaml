@@ -4,14 +4,13 @@ Spring:
   application:
     name: Compensation-Service
   datasource:
-    url: jdbc:mysql://localhost:3307/compensationDB?allowPublicKeyRetrieval=true
-    username: root
+    url: jdbc:postgresql://localhost:5432/compensationDB
+    username: postgres
     password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
-    database-platform: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
 
 eureka:
