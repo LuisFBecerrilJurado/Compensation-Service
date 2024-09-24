@@ -1,6 +1,7 @@
 package com.example.compensationservice.Entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
