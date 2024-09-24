@@ -3,13 +3,13 @@ package com.example.compensationservice.Controller;
 import com.example.compensationservice.Entities.Compensation;
 import com.example.compensationservice.Exceptions.CompensationException;
 import com.example.compensationservice.Service.CompensationService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,7 +60,9 @@ public class CompensationController {
 
     @GetMapping("/users/{idUser}")
     public ResponseEntity<List<Compensation>> getCompensationByUserId(@PathVariable String idUser) {
-        return ResponseEntity.ok(compensationService.getCompensationByUserId(idUser));
+        List<Compensation> compensationOptional = compensationService.getCompensationByIdUser(idUser);
+        if(compensationOptional.isEmpty()) throw new CompensationException("Compensation not found with idUser: " + idUser);
+        return ResponseEntity.ok(compensationService.getCompensationByIdUser(idUser));
     }
 
     @DeleteMapping("/{id}")
