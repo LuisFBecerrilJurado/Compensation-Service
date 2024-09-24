@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface CompensationRepository extends JpaRepository<Compensation, String> {
     List<Compensation> findByIdUser(String userId);
-    boolean existsByDateCompensation(String date);
+    boolean existsByDateCompensationAndIdUser(String date, String userId);
 }
