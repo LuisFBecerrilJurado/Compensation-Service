@@ -3,7 +3,6 @@ package com.example.compensationservice.Service;
 import com.example.compensationservice.Entities.Compensation;
 import com.example.compensationservice.Exceptions.CompensationException;
 import com.example.compensationservice.Repository.CompensationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -12,8 +11,11 @@ import java.util.UUID;
 
 @Service
 public class CompensationServiceImpl implements CompensationService{
-    @Autowired
-    private CompensationRepository compensationRepository;
+    private final CompensationRepository compensationRepository;
+
+    public CompensationServiceImpl(CompensationRepository compensationRepository) {
+        this.compensationRepository = compensationRepository;
+    }
 
     @Override
     public List<Compensation> getAllCompensations() {
@@ -31,19 +33,11 @@ public class CompensationServiceImpl implements CompensationService{
     }
 
     public void validateFields(Compensation compensation) {
-        if(compensation.getType() == null) throw new CompensationException("Compensation type field is required");
-        if(compensation.getAmount() == null) throw new CompensationException("Compensation amount field is required");
-        if(compensation.getDateCompensation() == null) throw new CompensationException("Compensation date field is required");
-        if(compensation.getIdUser() == null) throw new CompensationException("Id user field is required");
-        if(!compensation.getType().equals("salary") && compensation.getDescription() == null) throw new CompensationException("Compensation description field is required");
-    }
-
-    private void validateAmountGreaterThanZero(Compensation compensation, String errorMessage) {
-        if (compensation.getAmount() < 0) throw new CompensationException(errorMessage);
-    }
-
-    private void validateAmountDifferentFromZero(Compensation compensation, String errorMessage) {
-        if (compensation.getAmount() == 0) throw new CompensationException(errorMessage);
+        if(compensation.getType() == null || compensation.getType().isEmpty() ) throw new CompensationException("Compensation Type field is required");
+        if(compensation.getAmount() == null) throw new CompensationException("Compensation Amount field is required");
+        if(compensation.getIdUser() == null || compensation.getIdUser().isEmpty() ) throw new CompensationException("Compensation IdUser field is required");
+        if(!compensation.getType().equals("salary") && (compensation.getDescription() == null || compensation.getDescription().isEmpty()))
+            throw new CompensationException("Compensation description field is required");
     }
 
     private void compensationValidation(Compensation compensation) {
@@ -52,6 +46,7 @@ public class CompensationServiceImpl implements CompensationService{
     }
 
     private void validateDate(Compensation compensation) {
+        if(compensation.getLocalDate() == null) throw new CompensationException("Compensation Date field is required");
         LocalDate currentDate = LocalDate.now();
         if(compensation.getLocalDate().isBefore(currentDate)) throw new CompensationException("Date must be after the current date");
     }
@@ -62,19 +57,19 @@ public class CompensationServiceImpl implements CompensationService{
         validateFields(compensation);
         validateDate(compensation);
         generateAndSetUserId(compensation);
-        final String amountLessThanZeroError = "Amount must be greater than 0";
-        final String amountEqualZeroError = "Amount must be different than 0";
         switch (compensation.getType()) {
             case "salary" -> {
                 compensation.setSalaryAdded(true);
                 compensationRepository.save(compensation);
             }
             case "bonus", "commission", "allowance" -> {
-                validateAmountGreaterThanZero(compensation, amountLessThanZeroError);
+                if (compensation.getAmount() < 0) throw new CompensationException("Amount must be greater than 0");
+                compensation.setSalaryAdded(false);
                 compensationRepository.save(compensation);
             }
             case "adjustment" -> {
-                validateAmountDifferentFromZero(compensation, amountEqualZeroError);
+                if (compensation.getAmount() == 0) throw new CompensationException("Amount must be different than 0");
+                compensation.setSalaryAdded(false);
                 compensationRepository.save(compensation);
             }
             default -> {
@@ -82,15 +77,29 @@ public class CompensationServiceImpl implements CompensationService{
         }
     }
 
+    private void validateSalary(Compensation compensation) {
+        if(compensation.getSalaryAdded()){
+            if(compensation.getType().equals("salary")) throw new CompensationException("Only one salary can be added per compensation");
+        }
+    }
+
+    @Override
+    public void updateCompensation(Compensation compensation) {
+        validateSalary(compensation);
+        validateFields(compensation);
+        if (compensation.getLocalDate() != null) validateDate(compensation);
+        if (compensation.getSalaryAdded()) {
+            if (compensation.getType().equals("salary"))
+                throw new CompensationException("Only can add one salary per Compensation");
+        }
+        compensationRepository.save(compensation);
+    }
+
     @Override
     public void deleteCompensation(String id) {
         compensationRepository.deleteById(id);
     }
 
-    @Override
-    public void updateCompensation(Compensation compensation) {
-
-    }
 
     @Override
     public List<Compensation> getCompensationByIdUser(String idUser) {
